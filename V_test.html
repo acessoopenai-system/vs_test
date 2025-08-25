@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <title>SV_Teste</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      max-width: 400px;
+      margin: 40px auto;
+      padding: 20px;
+      border: 1px solid #ccc;
+      border-radius: 10px;
+    }
+    input, button {
+      width: 100%;
+      margin: 8px 0;
+      padding: 10px;
+      font-size: 16px;
+    }
+    button {
+      background: #28a745;
+      color: white;
+      border: none;
+      cursor: pointer;
+      border-radius: 5px;
+    }
+    button:hover {
+      background: #218838;
+    }
+  </style>
+</head>
+<body>
+  <h2>Registrar Venda</h2>
+
+  <input id="nome" placeholder="Nome do cliente">
+  <input id="produto" placeholder="Produto">
+  <input id="valor" placeholder="Valor">
+
+  <button onclick="salvar()">Salvar</button>
+
+  <p id="status"></p>
+
+  <script>
+    const URL = 'https://script.google.com/macros/s/AKfycbyyYcmc_11Fvd5VjmBx2FKt6qHphx7i0KNjEUKAWevLkIl-kRCUFtiH2yz7NyUiw8VkhA/exec';
+
+    function salvar() {
+      const dados = {
+        nome: document.getElementById("nome").value,
+        produto: document.getElementById("produto").value,
+        valor: document.getElementById("valor").value,
+        data: new Date().toLocaleDateString("pt-BR")
+      };
+
+      fetch(URL, {
+        method: "POST",
+		mode: "no-cors",
+        body: JSON.stringify(dados),
+        headers: { "Content-Type": "application/json" }
+      })
+      .then(r => r.text())
+      .then(res => {
+        document.getElementById("status").innerText = "✅ Enviado!";
+      })
+      .catch(err => {
+        document.getElementById("status").innerText = "❌ Erro!";
+        console.error(err);
+      });
+    }
+  </script>
+</body>
+</html>
+
