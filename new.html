@@ -260,5 +260,16 @@
                 exibirStatus({ status: 'error', mensagem: 'Erro de comunicação: ' + error });
             });
         }
-        
+          function limparFormulario() {
+            document.getElementById('vendaForm').reset();
+            document.getElementById('precoUnitario').value = '';
+            document.getElementById('total').textContent = 'R$ 0,00';
+            precoUnitarioGlobal = 0;
+            exibirStatus({ status: 'sucesso', mensagem: 'Formulário limpo com sucesso!' });
+            carregarProdutosUnicos();
+        }
+    </script>
+</body>
+</html>
+
       
