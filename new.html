@@ -1,17 +1,17 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-    <base target="_top">
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <meta charset="UTF-8">
+    <title>Lançar Venda</title>
     <style>
         body {
-            font-family: 'Poppins', sans-serif;
+            font-family: Arial, sans-serif;
             background-color: #f0f2f5;
             color: #333;
             padding: 20px;
         }
         .container {
-            max-width: 600px;
+            max-width: 400px;
             margin: 0 auto;
             background-color: #fff;
             padding: 30px;
@@ -32,7 +32,7 @@
             color: #555;
             margin-bottom: 5px;
         }
-        .form-group input, .form-group select {
+        .form-group input {
             width: 100%;
             padding: 10px;
             border-radius: 8px;
@@ -40,58 +40,20 @@
             box-sizing: border-box;
             font-size: 14px;
         }
-        .form-group input:focus, .form-group select:focus {
-            outline: none;
-            border-color: #3498db;
-        }
-        .buttons-container {
-            display: flex;
-            gap: 10px;
-            margin-top: 10px;
-        }
         .btn {
+            width: 100%;
             padding: 12px;
             border: none;
             border-radius: 8px;
             font-size: 16px;
             font-weight: 600;
             cursor: pointer;
-            transition: background-color 0.3s;
-            flex: 1;
-        }
-        #btnLancarVenda {
             background-color: #27ae60;
             color: #fff;
+            transition: background-color 0.3s;
         }
-        #btnLancarVenda:hover {
+        .btn:hover {
             background-color: #219d54;
-        }
-        #btnLimparForm {
-            background-color: #f39c12;
-            color: #fff;
-        }
-        #btnLimparForm:hover {
-            background-color: #e67e22;
-        }
-        .total-section {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            background-color: #f8f9fa;
-            padding: 15px;
-            border-radius: 8px;
-            border: 1px solid #e9ecef;
-            margin-top: 20px;
-        }
-        .total-label {
-            font-size: 18px;
-            font-weight: 600;
-            color: #2c3e50;
-        }
-        .total-value {
-            font-size: 24px;
-            font-weight: 700;
-            color: #e74c3c;
         }
         #statusMessage {
             text-align: center;
@@ -115,49 +77,35 @@
 </head>
 <body>
     <div class="container">
-        <h2>Registrar Venda</h2>
+        <h2>Lançar Nova Venda</h2>
         <form id="vendaForm">
             <div class="form-group">
-                <label for="produto">Produto</label>
-                <select id="produto" required>
-                    <option value="">Carregando produtos...</option>
-                </select>
+                <label for="produto">Nome do Produto</label>
+                <input type="text" id="produto" required>
             </div>
             <div class="form-group">
                 <label for="quantidade">Quantidade</label>
                 <input type="number" id="quantidade" step="any" min="0" required>
             </div>
             <div class="form-group">
-                <label for="precoUnitario">Preço Unitário (R$)</label>
-                <input type="number" id="precoUnitario" step="0.01" min="0" readonly>
+                <label for="total">Valor Total (R$)</label>
+                <input type="number" id="total" step="0.01" min="0" required>
             </div>
-            <div class="total-section">
-                <div class="total-label">Total</div>
-                <div id="total" class="total-value">R$ 0,00</div>
-            </div>
-            <div class="buttons-container">
-                <button type="submit" id="btnLancarVenda" class="btn">Lançar Venda</button>
-                <button type="button" id="btnLimparForm" class="btn">Limpar</button>
-            </div>
+            <button type="submit" class="btn">Lançar Venda</button>
         </form>
         <div id="statusMessage"></div>
     </div>
 
     <script>
         const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyyYcmc_11Fvd5VjmBx2FKt6qHphx7i0KNjEUKAWevLkIl-kRCUFtiH2yz7NyUiw8VkhA/exec'; // COLOQUE A URL DO SEU APPS SCRIPT AQUI!
-        let precoUnitarioGlobal = 0;
-
+        
         document.addEventListener('DOMContentLoaded', function() {
             if(SCRIPT_URL === '') {
-                exibirStatus({ status: 'error', mensagem: 'Por favor, COLE a URL do Apps Script no código.' });
+                exibirStatus({ status: 'error', mensagem: 'Por favor, cole a URL do Apps Script no código.' });
                 return;
             }
-            carregarProdutosUnicos();
             
             document.getElementById('vendaForm').addEventListener('submit', lancarVenda);
-            document.getElementById('btnLimparForm').addEventListener('click', limparFormulario);
-            document.getElementById('produto').addEventListener('change', atualizarPreco);
-            document.getElementById('quantidade').addEventListener('input', calcularTotal);
         });
 
         function exibirStatus(resposta) {
@@ -172,76 +120,14 @@
                 statusMessage.style.display = 'none';
             }, 5000);
         }
-
-        function carregarProdutosUnicos() {
-            fetch(SCRIPT_URL, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ action: 'obterProdutosUnicos' })
-            })
-            .then(response => response.json())
-            .then(data => {
-                const selectProduto = document.getElementById('produto');
-                selectProduto.innerHTML = '<option value="">Selecione um produto</option>';
-                if (data.status === 'sucesso' && data.dados && data.dados.length > 0) {
-                    data.dados.forEach(p => {
-                        const option = document.createElement('option');
-                        option.value = p;
-                        option.textContent = p;
-                        selectProduto.appendChild(option);
-                    });
-                } else {
-                    selectProduto.innerHTML = '<option value="">Nenhum produto cadastrado</option>';
-                }
-            })
-            .catch(error => {
-                exibirStatus({ status: 'error', mensagem: 'Erro ao carregar produtos: ' + error });
-            });
-        }
-
-        function atualizarPreco() {
-            const produtoSelecionado = document.getElementById('produto').value;
-            if (produtoSelecionado) {
-                fetch(SCRIPT_URL, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ action: 'obterProdutoPorNome', data: { nome: produtoSelecionado } })
-                })
-                .then(response => response.json())
-                .then(data => {
-                    if (data.status === 'sucesso' && data.dados) {
-                        precoUnitarioGlobal = data.dados[3]; // O preço é a 4ª coluna (índice 3)
-                        document.getElementById('precoUnitario').value = precoUnitarioGlobal.toFixed(2);
-                        calcularTotal();
-                    }
-                })
-                .catch(error => {
-                    exibirStatus({ status: 'error', mensagem: 'Erro ao obter preço do produto: ' + error });
-                });
-            } else {
-                precoUnitarioGlobal = 0;
-                document.getElementById('precoUnitario').value = '';
-                calcularTotal();
-            }
-        }
-
-        function calcularTotal() {
-            const quantidade = parseFloat(document.getElementById('quantidade').value) || 0;
-            const total = quantidade * precoUnitarioGlobal;
-            document.getElementById('total').textContent = `R$ ${total.toFixed(2).replace('.', ',')}`;
-        }
         
         function lancarVenda(event) {
             event.preventDefault();
             
-            const totalElement = document.getElementById('total');
-            const totalTexto = totalElement.textContent.replace('R$ ', '').replace(',', '.');
-            const total = parseFloat(totalTexto);
-
             const venda = {
                 produto: document.getElementById('produto').value,
                 quantidade: parseFloat(document.getElementById('quantidade').value),
-                total: total
+                total: parseFloat(document.getElementById('total').value)
             };
 
             fetch(SCRIPT_URL, {
@@ -253,23 +139,13 @@
             .then(data => {
                 exibirStatus(data);
                 if (data.status === 'sucesso') {
-                    limparFormulario();
+                    document.getElementById('vendaForm').reset();
                 }
             })
             .catch(error => {
                 exibirStatus({ status: 'error', mensagem: 'Erro de comunicação: ' + error });
             });
         }
-          function limparFormulario() {
-            document.getElementById('vendaForm').reset();
-            document.getElementById('precoUnitario').value = '';
-            document.getElementById('total').textContent = 'R$ 0,00';
-            precoUnitarioGlobal = 0;
-            exibirStatus({ status: 'sucesso', mensagem: 'Formulário limpo com sucesso!' });
-            carregarProdutosUnicos();
-        }
     </script>
 </body>
 </html>
-
-      
