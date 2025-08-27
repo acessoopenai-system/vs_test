@@ -4,108 +4,39 @@
     <meta charset="UTF-8">
     <title>Lançar Venda</title>
     <style>
-        body {
-            font-family: Arial, sans-serif;
-            background-color: #f0f2f5;
-            color: #333;
-            padding: 20px;
-        }
-        .container {
-            max-width: 400px;
-            margin: 0 auto;
-            background-color: #fff;
-            padding: 30px;
-            border-radius: 12px;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-        }
-        h2 {
-            text-align: center;
-            color: #2c3e50;
-            margin-bottom: 20px;
-        }
-        .form-group {
-            margin-bottom: 15px;
-        }
-        .form-group label {
-            display: block;
-            font-size: 14px;
-            color: #555;
-            margin-bottom: 5px;
-        }
-        .form-group input {
-            width: 100%;
-            padding: 10px;
-            border-radius: 8px;
-            border: 1px solid #ccc;
-            box-sizing: border-box;
-            font-size: 14px;
-        }
-        .btn {
-            width: 100%;
-            padding: 12px;
-            border: none;
-            border-radius: 8px;
-            font-size: 16px;
-            font-weight: 600;
-            cursor: pointer;
-            background-color: #27ae60;
-            color: #fff;
-            transition: background-color 0.3s;
-        }
-        .btn:hover {
-            background-color: #219d54;
-        }
-        #statusMessage {
-            text-align: center;
-            margin-top: 15px;
-            padding: 10px;
-            border-radius: 8px;
-            font-size: 14px;
-            display: none;
-        }
-        #statusMessage.success {
-            background-color: #e8f5e9;
-            color: #2e7d32;
-            border: 1px solid #c8e6c9;
-        }
-        #statusMessage.error {
-            background-color: #ffebee;
-            color: #c62828;
-            border: 1px solid #ef9a9a;
-        }
+        /* ... (seu CSS existente) ... */
+        .vendas-lista {margin-top:30px;}
+        .vendas-lista table {width:100%;border-collapse:collapse;}
+        .vendas-lista th, .vendas-lista td {border:1px solid #ccc;padding:6px;text-align:left;}
+        .vendas-lista th {background:#eee;}
     </style>
 </head>
 <body>
     <div class="container">
         <h2>Lançar Nova Venda</h2>
         <form id="vendaForm">
-            <div class="form-group">
-                <label for="produto">Nome do Produto</label>
-                <input type="text" id="produto" required>
-            </div>
-            <div class="form-group">
-                <label for="quantidade">Quantidade</label>
-                <input type="number" id="quantidade" step="any" min="0" required>
-            </div>
-            <div class="form-group">
-                <label for="total">Valor Total (R$)</label>
-                <input type="number" id="total" step="0.01" min="0" required>
-            </div>
-            <button type="submit" class="btn">Lançar Venda</button>
+            <!-- ... (seu formulário existente) ... -->
         </form>
         <div id="statusMessage"></div>
+        
+        <div class="vendas-lista">
+            <h3>Vendas Registradas</h3>
+            <button id="btnCarregarVendas" type="button" class="btn" style="background:#3498db;margin-bottom:10px;">Carregar Vendas</button>
+            <div id="listaVendas"></div>
+        </div>
     </div>
 
     <script>
-        const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyyYcmc_11Fvd5VjmBx2FKt6qHphx7i0KNjEUKAWevLkIl-kRCUFtiH2yz7NyUiw8VkhA/exec'; // COLOQUE A URL DO SEU APPS SCRIPT AQUI!
-        
+        const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyyYcmc_11Fvd5VjmBx2FKt6qHphx7i0KNjEUKAWevLkIl-kRCUFtiH2yz7NyUiw8VkhA/exec';
+
         document.addEventListener('DOMContentLoaded', function() {
             if(SCRIPT_URL === '') {
                 exibirStatus({ status: 'error', mensagem: 'Por favor, cole a URL do Apps Script no código.' });
                 return;
             }
-            
             document.getElementById('vendaForm').addEventListener('submit', lancarVenda);
+            document.getElementById('btnCarregarVendas').addEventListener('click', carregarVendas);
+            carregarVendas(); // Carrega automaticamente ao abrir a página
         });
 
         function exibirStatus(resposta) {
@@ -123,7 +54,6 @@
         
         function lancarVenda(event) {
             event.preventDefault();
-            
             const venda = {
                 produto: document.getElementById('produto').value,
                 quantidade: parseFloat(document.getElementById('quantidade').value),
@@ -132,7 +62,6 @@
 
             fetch(SCRIPT_URL, {
                 method: 'POST',
-                mode: "no-cors",
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ action: 'lancarVenda', data: venda })
             })
@@ -141,11 +70,46 @@
                 exibirStatus(data);
                 if (data.status === 'sucesso') {
                     document.getElementById('vendaForm').reset();
+                    carregarVendas();
                 }
             })
             .catch(error => {
                 exibirStatus({ status: 'error', mensagem: 'Erro de comunicação: ' + error });
             });
+        }
+
+        function carregarVendas() {
+            fetch(SCRIPT_URL)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.status === 'sucesso') {
+                        mostrarVendas(data.vendas);
+                    } else {
+                        document.getElementById('listaVendas').innerHTML = '<p style="color:red;">'+data.mensagem+'</p>';
+                    }
+                })
+                .catch(error => {
+                    document.getElementById('listaVendas').innerHTML = '<p style="color:red;">Erro ao carregar vendas: '+error+'</p>';
+                });
+        }
+
+        function mostrarVendas(vendas) {
+            if (!vendas || vendas.length === 0) {
+                document.getElementById('listaVendas').innerHTML = '<p>Nenhuma venda registrada ainda.</p>';
+                return;
+            }
+            let html = '<table><tr><th>ID</th><th>Data</th><th>Produto</th><th>Quantidade</th><th>Total (R$)</th></tr>';
+            vendas.forEach(v => {
+                html += `<tr>
+                    <td>${v.id}</td>
+                    <td>${(new Date(v.data)).toLocaleString()}</td>
+                    <td>${v.produto}</td>
+                    <td>${v.quantidade}</td>
+                    <td>${v.total}</td>
+                </tr>`;
+            });
+            html += '</table>';
+            document.getElementById('listaVendas').innerHTML = html;
         }
     </script>
 </body>
